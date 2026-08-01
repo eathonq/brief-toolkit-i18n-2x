@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>i18n Manager</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 13px;
+      color: #d9d9d9;
+      background: #1f1f1f;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 800px;
+    }
+
+    /* ── Section ── */
+    .section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #b0b0b0;
+      margin: 0;
+    }
+
+    /* ── Row ── */
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row-grow {
+      flex: 1;
+    }
+
+    /* ── Input ── */
+    .input {
+      flex: 1;
+      min-width: 120px;
+      height: 28px;
+      padding: 4px 8px;
+      border: 1px solid #4a4a4a;
+      border-radius: 4px;
+      background: #2a2a2a;
+      color: #d9d9d9;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .input:focus {
+      border-color: #2b88d8;
+    }
+
+    .input-small {
+      flex: 0 0 100px;
+      min-width: 80px;
+    }
+
+    .input-name {
+      flex: 0 0 140px;
+      min-width: 100px;
+    }
+
+    /* ── Button ── */
+    .btn {
+      height: 28px;
+      min-width: 68px;
+      padding: 0 12px;
+      border: 1px solid #2b88d8;
+      border-radius: 4px;
+      background: transparent;
+      color: #2b88d8;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.15s, opacity 0.15s;
+    }
+
+    .btn:hover {
+      background: rgba(43, 136, 216, 0.18);
+    }
+
+    .btn:active {
+      background: rgba(43, 136, 216, 0.30);
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .btn-primary {
+      background: #2b88d8;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #3598e8;
+    }
+
+    .btn-danger {
+      border-color: #b63a3a;
+      background: #b63a3a;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #cf4444;
+      border-color: #cf4444;
+    }
+
+    .btn-danger:disabled {
+      background: transparent;
+      color: #9c9c9c;
+      border-color: #4a4a4a;
+    }
+
+    .btn-danger.btn-confirm {
+      background: #e04848;
+      border-color: #e04848;
+      color: #fff;
+      animation: pulse 0.8s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 1; }
+      to   { opacity: 0.6; }
+    }
+
+    .btn-sm {
+      height: 24px;
+      min-width: 52px;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border-bottom: 1px solid #3f3f3f;
+      padding: 8px 6px;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    th {
+      font-weight: 600;
+      color: #9c9c9c;
+      font-size: 12px;
+    }
+
+    td {
+      vertical-align: middle;
+    }
+
+    .col-code   { width: 100px; }
+    .col-name   { width: auto; }
+    .col-badge  { width: 70px;  text-align: center; }
+    .col-btn    { width: 74px;  text-align: center; }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-template {
+      background: rgba(43, 136, 216, 0.25);
+      color: #2b88d8;
+    }
+
+    .badge-normal {
+      background: rgba(156, 156, 156, 0.15);
+      color: #9c9c9c;
+    }
+
+    /* ── Status message ── */
+    .status-msg {
+      font-size: 12px;
+      color: #9c9c9c;
+      min-height: 16px;
+      line-height: 16px;
+      transition: color 0.3s;
+    }
+
+    .status-msg.error {
+      color: #cf4444;
+    }
+
+    .status-msg.success {
+      color: #4caf50;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #3f3f3f;
+      margin: 0;
+    }
+
+    /* ── Empty state ── */
+    .empty-tip {
+      color: #9c9c9c;
+      text-align: center;
+      padding: 24px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+
+    <!-- ═══ Resource Directory Setting ═══ -->
+    <div class="section">
+      <h3 id="resourceDirTitle" class="section-title"></h3>
+      <div class="row">
+        <input id="resourceDirInput" class="input" type="text" />
+        <button id="confirmResourceDirBtn" class="btn btn-primary"></button>
+      </div>
+      <span id="dirStatus" class="status-msg"></span>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- ═══ Language List ═══ -->
+    <div class="section">
+      <h3 id="languageListTitle" class="section-title"></h3>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th id="thCode" class="col-code"></th>
+              <th id="thName" class="col-name"></th>
+              <th id="thBadge" class="col-badge"></th>
+              <th id="thSetTemplate" class="col-btn"></th>
+              <th id="thSync" class="col-btn"></th>
+              <th id="thOpen" class="col-btn"></th>
+              <th id="thDelete" class="col-btn"></th>
+            </tr>
+          </thead>
+          <tbody id="dirTableBody">
+            <tr><td colspan="7" class="empty-tip"></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- ═══ Add Language ═══ -->
+    <div class="section">
+      <h3 id="addLanguageTitle" class="section-title"></h3>
+      <div class="row">
+        <input id="newCodeInput" class="input input-small" type="text" maxlength="12" />
+        <input id="newNameInput" class="input input-name" type="text" />
+        <button id="addLocaleBtn" class="btn btn-primary"></button>
+      </div>
+      <span id="addStatus" class="status-msg"></span>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- Script                                                        -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <script>
+    (function () {
+      'use strict';
+
+      var PKG = 'brief-toolkit-i18n-2x';
+
+      // ── i18n helper ──────────────────────────────────────
+      function T(key) { return Editor.T(PKG + '.' + key); }
+      function Tf(key, args) {
+        var t = T(key);
+        for (var i = 0; i < args.length; i++) {
+          t = t.replace('{' + i + '}', String(args[i]));
+        }
+        return t;
+      }
+
+      // ── State ──────────────────────────────────────────
+      var resourceDir = '';
+      var locales = [];
+      var templateCode = null;
+
+      // ── DOM refs ───────────────────────────────────────
+      var $ = function (id) { return document.getElementById(id); };
+
+      var resourceDirInput = $('resourceDirInput');
+      var confirmResourceDirBtn = $('confirmResourceDirBtn');
+      var dirStatus = $('dirStatus');
+      var dirTableBody = $('dirTableBody');
+      var newCodeInput = $('newCodeInput');
+      var newNameInput = $('newNameInput');
+      var addLocaleBtn = $('addLocaleBtn');
+      var addStatus = $('addStatus');
+
+      // ── IPC helpers ────────────────────────────────────
+
+      function ipcSend(msg, data) {
+        return new Promise(function (resolve, reject) {
+          var args = [PKG + ':' + msg];
+          if (data !== undefined) args.push(data);
+          args.push(function (err, result) {
+            if (err) reject(err);
+            else resolve(result);
+          });
+          Editor.Ipc.sendToMain.apply(Editor.Ipc, args);
+        });
+      }
+
+      // ── UI helpers ─────────────────────────────────────
+
+      function setStatus(el, text, type) {
+        el.textContent = text || '';
+        el.className = 'status-msg';
+        if (type) el.classList.add(type);
+        clearTimeout(el._timer);
+        if (text) {
+          el._timer = setTimeout(function () {
+            el.textContent = '';
+            el.className = 'status-msg';
+          }, 4000);
+        }
+      }
+
+      function dirMsg(text, type) { setStatus(dirStatus, text, type); }
+      function addMsg(text, type) { setStatus(addStatus, text, type); }
+
+      // ── Render table ───────────────────────────────────
+
+      function renderTable() {
+        dirTableBody.innerHTML = '';
+
+        if (locales.length === 0) {
+          var tr = document.createElement('tr');
+          var td = document.createElement('td');
+          td.colSpan = 7;
+          td.className = 'empty-tip';
+          td.textContent = resourceDir ? T('empty_no_files') : T('empty_tip');
+          tr.appendChild(td);
+          dirTableBody.appendChild(tr);
+          return;
+        }
+
+        for (var i = 0; i < locales.length; i++) {
+          (function (loc) {
+            var isTemplate = (templateCode === loc.code);
+            var tr = document.createElement('tr');
+
+            // Code
+            var tdCode = document.createElement('td');
+            tdCode.className = 'col-code';
+            tdCode.textContent = loc.code;
+            tr.appendChild(tdCode);
+
+            // Name
+            var tdName = document.createElement('td');
+            tdName.className = 'col-name';
+            tdName.textContent = loc.name || loc.code;
+            tr.appendChild(tdName);
+
+            // Badge
+            var tdBadge = document.createElement('td');
+            tdBadge.className = 'col-badge';
+            var badge = document.createElement('span');
+            badge.className = 'badge ' + (isTemplate ? 'badge-template' : 'badge-normal');
+            badge.textContent = isTemplate ? T('badge_template') : T('badge_none');
+            tdBadge.appendChild(badge);
+            tr.appendChild(tdBadge);
+
+            // Set Template
+            var tdSet = document.createElement('td');
+            tdSet.className = 'col-btn';
+            var btnSet = document.createElement('button');
+            btnSet.className = 'btn btn-sm';
+            btnSet.textContent = T('template_btn');
+            btnSet.disabled = isTemplate;
+            btnSet.onclick = function () { setTemplate(loc.code); };
+            tdSet.appendChild(btnSet);
+            tr.appendChild(tdSet);
+
+            // Sync — only the template row can push keys to others
+            var tdSync = document.createElement('td');
+            tdSync.className = 'col-btn';
+            var btnSync = document.createElement('button');
+            btnSync.className = 'btn btn-sm';
+            btnSync.textContent = T('sync_btn');
+            btnSync.disabled = !isTemplate;
+            btnSync.title = isTemplate ? Tf('msg_sync_ok', [templateCode, locales.map(function(l) { return l.code; }).filter(function(c) { return c !== templateCode; }).join(', ')])
+                          : T('msg_no_template');
+            btnSync.onclick = function () { syncFromTemplate(); };
+            tdSync.appendChild(btnSync);
+            tr.appendChild(tdSync);
+
+            // Open
+            var tdOpen = document.createElement('td');
+            tdOpen.className = 'col-btn';
+            var btnOpen = document.createElement('button');
+            btnOpen.className = 'btn btn-sm';
+            btnOpen.textContent = T('open_btn');
+            btnOpen.onclick = function () { openLocaleFile(loc.code); };
+            tdOpen.appendChild(btnOpen);
+            tr.appendChild(tdOpen);
+
+            // Delete
+            var tdDel = document.createElement('td');
+            tdDel.className = 'col-btn';
+            var btnDel = document.createElement('button');
+            btnDel.className = 'btn btn-sm btn-danger';
+            btnDel.textContent = T('delete_btn');
+            btnDel.onclick = function () { deleteLocale(loc.code, btnDel); };
+            tdDel.appendChild(btnDel);
+            tr.appendChild(tdDel);
+
+            dirTableBody.appendChild(tr);
+          })(locales[i]);
+        }
+      }
+
+      // ── Operations ───────────────────────────────────────
+
+      function loadLocales() {
+        if (!resourceDir) return;
+        ipcSend('get-locales', resourceDir).then(function (result) {
+          var prevTemplate = templateCode;
+          locales = (result && result.locales) || [];
+          if (!templateCode && locales.length > 0) {
+            templateCode = locales[0].code;
+          }
+          if (templateCode && !locales.some(function (l) { return l.code === templateCode; })) {
+            templateCode = locales.length > 0 ? locales[0].code : null;
+          }
+          if (templateCode !== prevTemplate) saveState();
+          renderTable();
+          dirMsg(Tf('msg_loaded', [locales.length]), 'success');
+        }).catch(function (err) {
+          dirMsg(Tf('msg_load_failed', [String(err.message || err)]), 'error');
+        });
+      }
+
+      function setTemplate(code) {
+        templateCode = code;
+        saveState();
+        renderTable();
+        dirMsg(Tf('msg_template_set', [code]), 'success');
+      }
+
+      function syncFromTemplate() {
+        if (!templateCode) {
+          dirMsg(T('msg_need_template'), 'error');
+          return;
+        }
+        var targets = locales.filter(function (l) { return l.code !== templateCode; });
+        if (targets.length === 0) return;
+
+        var done = 0;
+        var failed = [];
+        function next() {
+          if (done >= targets.length) {
+            if (failed.length === 0) {
+              dirMsg(Tf('msg_sync_ok', [templateCode, targets.map(function(t){return t.code;}).join(', ')]), 'success');
+            } else {
+              dirMsg(Tf('msg_sync_failed', [failed.join(', ')]), 'error');
+            }
+            return;
+          }
+          var code = targets[done].code;
+          ipcSend('sync-locale', {
+            resourceDir: resourceDir,
+            code: code,
+            templateCode: templateCode,
+          }).then(function () {
+            done++;
+            next();
+          }).catch(function (err) {
+            failed.push(code);
+            done++;
+            next();
+          });
+        }
+        next();
+      }
+
+      function openLocaleFile(code) {
+        var filePath = resourceDir + '/' + code + '.json';
+        ipcSend('open-file', filePath).catch(function (err) {
+          dirMsg(Tf('msg_open_failed', [String(err.message || err)]), 'error');
+        });
+      }
+
+      var pendingDelete = null;
+
+      function deleteLocale(code, btn) {
+        // First click: ask for confirmation by changing button text
+        if (pendingDelete !== code) {
+          pendingDelete = code;
+          btn.textContent = T('delete_confirm_btn');
+          btn.classList.add('btn-confirm');
+          clearTimeout(btn._resetTimer);
+          btn._resetTimer = setTimeout(function () {
+            if (pendingDelete === code) {
+              pendingDelete = null;
+              btn.textContent = T('delete_btn');
+              btn.classList.remove('btn-confirm');
+            }
+          }, 3000);
+          return;
+        }
+
+        // Second click: confirmed
+        pendingDelete = null;
+        btn.textContent = T('delete_btn');
+        btn.classList.remove('btn-confirm');
+        clearTimeout(btn._resetTimer);
+
+        ipcSend('delete-locale', { resourceDir: resourceDir, code: code }).then(function () {
+          dirMsg(Tf('msg_deleted', [code]), 'success');
+          if (templateCode === code) templateCode = null;
+          loadLocales();
+        }).catch(function (err) {
+          dirMsg(Tf('msg_delete_failed', [String(err.message || err)]), 'error');
+        });
+      }
+
+      function addLocale() {
+        var code = newCodeInput.value.trim();
+        var name = newNameInput.value.trim();
+
+        if (!code) {
+          addMsg(T('msg_enter_code'), 'error');
+          return;
+        }
+        if (!/^[a-z]{2,3}(-[A-Z]{2})?$/.test(code)) {
+          addMsg(T('msg_invalid_code'), 'error');
+          return;
+        }
+
+        ipcSend('add-locale', {
+          resourceDir: resourceDir,
+          code: code,
+          name: name || code,
+          templateCode: templateCode,
+        }).then(function () {
+          newCodeInput.value = '';
+          newNameInput.value = '';
+          addMsg(Tf('msg_added', [code]), 'success');
+          loadLocales();
+        }).catch(function (err) {
+          addMsg(Tf('msg_add_failed', [String(err.message || err)]), 'error');
+        });
+      }
+
+      // ── Init static i18n text ───────────────────────────
+
+      function initI18nText() {
+        // Section titles
+        $('resourceDirTitle').textContent = T('resource_dir_title');
+        $('languageListTitle').textContent = T('language_list_title');
+        $('addLanguageTitle').textContent = T('add_language_title');
+
+        // Placeholders
+        resourceDirInput.placeholder = T('dir_placeholder');
+        newCodeInput.placeholder = T('add_code_placeholder');
+        newNameInput.placeholder = T('add_name_placeholder');
+
+        // Button text
+        confirmResourceDirBtn.textContent = T('set_btn');
+        addLocaleBtn.textContent = T('add_btn');
+
+        // Table headers
+        $('thCode').textContent = T('col_code');
+        $('thName').textContent = T('col_name');
+        $('thBadge').textContent = T('col_template');
+        $('thSetTemplate').textContent = T('col_set_template');
+        $('thSync').textContent = T('col_sync');
+        $('thOpen').textContent = T('col_open');
+        $('thDelete').textContent = T('col_delete');
+
+        // Empty tip
+        dirTableBody.rows[0].cells[0].textContent = T('empty_tip');
+      }
+
+      // ── State persistence ──────────────────────────────
+
+      function saveState() {
+        ipcSend('save-state', {
+          resourceDir: resourceDir,
+          templateCode: templateCode,
+        });
+      }
+
+      function restoreState() {
+        ipcSend('load-state').then(function (state) {
+          if (state && state.resourceDir) {
+            resourceDir = state.resourceDir;
+            resourceDirInput.value = state.resourceDir;
+            templateCode = state.templateCode || null;
+            loadLocales();
+          } else {
+            var defaultDir = 'i18n';
+            resourceDirInput.value = defaultDir;
+            resourceDir = defaultDir;
+            loadLocales();
+          }
+        });
+      }
+
+      // ── Initialization ───────────────────────────────────
+
+      function init() {
+        initI18nText();
+        restoreState();
+      }
+
+      // ── Event bindings ───────────────────────────────────
+
+      confirmResourceDirBtn.addEventListener('click', function () {
+        var val = resourceDirInput.value.trim();
+        if (!val) {
+          dirMsg(T('msg_enter_dir'), 'error');
+          return;
+        }
+        resourceDir = val;
+        templateCode = null;
+        saveState();
+        loadLocales();
+      });
+
+      // Press Enter in resource dir input
+      resourceDirInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') confirmResourceDirBtn.click();
+      });
+
+      addLocaleBtn.addEventListener('click', addLocale);
+
+      // Press Enter in new code/name inputs
+      newCodeInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') addLocale();
+        if (e.key === 'Tab') { e.preventDefault(); newNameInput.focus(); }
+      });
+      newNameInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') addLocale();
+      });
+
+      // ── Go ────────────────────────────────────────────────
+      init();
+
+    })();
+  </script>
+</body>
+</html>

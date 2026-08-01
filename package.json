@@ -1,0 +1,29 @@
+{
+  "name": "brief-toolkit-i18n-2x",
+  "version": "1.0.0",
+  "author": "vangagh@live.cn",
+  "description": "i18n 国际化扩展 — 管理多语言目录、模板和键同步。",
+  "main": "main.js",
+  "scene-script": "scene-script.js",
+  "main-menu": {
+    "i18n/打开 i18n 面板": {
+      "message": "打开 i18n 面板"
+    }
+  },
+  "panel": {
+    "main": "panel/i18n-panel.html",
+    "type": "simple",
+    "title": "i18n 管理器",
+    "width": 680,
+    "height": 520,
+    "min-width": 400,
+    "min-height": 300
+  },
+  "runtime-resource": {
+    "path": "static/assets/brief-toolkit",
+    "name": "plugin"
+  },
+  "reload": {
+    "ignore": ["static/assets/**/*"]
+  }
+}
