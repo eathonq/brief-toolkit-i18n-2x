@@ -47,5 +47,6 @@ module.exports = {
   msg_template_self: 'Template itself does not need sync.',
   msg_no_template: 'Set a template first.',
   delete_confirm_btn: 'Confirm',
+  sync_confirm_btn: 'Confirm Sync',
   delete_confirm: 'Delete locale "{0}"?\nThis will remove the JSON file. Image files are not deleted.',
 };

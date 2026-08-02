@@ -71,12 +71,7 @@
     }
 
     .input-small {
-      flex: 0 0 100px;
-      min-width: 80px;
-    }
-
-    .input-name {
-      flex: 0 0 140px;
+      flex: 0 0 120px;
       min-width: 100px;
     }
 
@@ -137,6 +132,24 @@
     .btn-danger.btn-confirm {
       background: #e04848;
       border-color: #e04848;
+      color: #fff;
+      animation: pulse 0.8s infinite alternate;
+    }
+
+    .btn-success {
+      border-color: #4caf50;
+      background: #4caf50;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background: #5cbf60;
+      border-color: #5cbf60;
+    }
+
+    .btn-success.btn-confirm {
+      background: #4caf50;
+      border-color: #4caf50;
       color: #fff;
       animation: pulse 0.8s infinite alternate;
     }
@@ -206,23 +219,6 @@
       color: #9c9c9c;
     }
 
-    /* ── Status message ── */
-    .status-msg {
-      font-size: 12px;
-      color: #9c9c9c;
-      min-height: 16px;
-      line-height: 16px;
-      transition: color 0.3s;
-    }
-
-    .status-msg.error {
-      color: #cf4444;
-    }
-
-    .status-msg.success {
-      color: #4caf50;
-    }
-
     /* ── Divider ── */
     .divider {
       border: none;
@@ -236,6 +232,53 @@
       text-align: center;
       padding: 24px 0;
     }
+
+    /* ── Log area ── */
+    .log-area {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 0;
+    }
+
+    .log-area:empty {
+      display: none;
+    }
+
+    .log-line {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #9c9c9c;
+      line-height: 1.4;
+      animation: logFadeIn 0.2s ease-out;
+      transition: opacity 0.3s ease-out, max-height 0.3s ease-out, padding 0.3s ease-out, margin 0.3s ease-out;
+      overflow: hidden;
+    }
+
+    .log-line.removing {
+      opacity: 0;
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin: 0;
+    }
+
+    .log-line.error {
+      color: #cf4444;
+      background: rgba(207, 68, 68, 0.1);
+    }
+
+    .log-line.success {
+      color: #4caf50;
+      background: rgba(76, 175, 80, 0.1);
+    }
+
+    @keyframes logFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -248,7 +291,6 @@
         <input id="resourceDirInput" class="input" type="text" />
         <button id="confirmResourceDirBtn" class="btn btn-primary"></button>
       </div>
-      <span id="dirStatus" class="status-msg"></span>
     </div>
 
     <hr class="divider" />
@@ -284,11 +326,14 @@
       <h3 id="addLanguageTitle" class="section-title"></h3>
       <div class="row">
         <input id="newCodeInput" class="input input-small" type="text" maxlength="12" />
-        <input id="newNameInput" class="input input-name" type="text" />
         <button id="addLocaleBtn" class="btn btn-primary"></button>
       </div>
-      <span id="addStatus" class="status-msg"></span>
     </div>
+
+    <hr class="divider" />
+
+    <!-- ═══ Log ═══ -->
+    <div id="logArea" class="log-area"></div>
 
   </div>
 
@@ -321,12 +366,10 @@
 
       var resourceDirInput = $('resourceDirInput');
       var confirmResourceDirBtn = $('confirmResourceDirBtn');
-      var dirStatus = $('dirStatus');
       var dirTableBody = $('dirTableBody');
       var newCodeInput = $('newCodeInput');
-      var newNameInput = $('newNameInput');
       var addLocaleBtn = $('addLocaleBtn');
-      var addStatus = $('addStatus');
+      var logArea = $('logArea');
 
       // ── IPC helpers ────────────────────────────────────
 
@@ -342,27 +385,32 @@
         });
       }
 
-      // ── UI helpers ─────────────────────────────────────
+      // ── Log ────────────────────────────────────────────
 
-      function setStatus(el, text, type) {
-        el.textContent = text || '';
-        el.className = 'status-msg';
-        if (type) el.classList.add(type);
-        clearTimeout(el._timer);
-        if (text) {
-          el._timer = setTimeout(function () {
-            el.textContent = '';
-            el.className = 'status-msg';
-          }, 4000);
-        }
+      function log(msg, type) {
+        var line = document.createElement('div');
+        line.className = 'log-line' + (type ? ' ' + type : '');
+        line.textContent = msg;
+        logArea.appendChild(line);
+
+        // Auto-remove after 5 seconds (4.7s + 0.3s fade-out animation)
+        setTimeout(function () {
+          line.classList.add('removing');
+          setTimeout(function () {
+            if (line.parentNode) line.parentNode.removeChild(line);
+          }, 300);
+        }, 4700);
       }
-
-      function dirMsg(text, type) { setStatus(dirStatus, text, type); }
-      function addMsg(text, type) { setStatus(addStatus, text, type); }
 
       // ── Render table ───────────────────────────────────
 
       function renderTable() {
+        // Reset sync pending state since buttons are recreated
+        if (pendingSync) {
+          pendingSync = false;
+          clearTimeout(pendingSyncTimer);
+        }
+
         dirTableBody.innerHTML = '';
 
         if (locales.length === 0) {
@@ -422,7 +470,7 @@
             btnSync.disabled = !isTemplate;
             btnSync.title = isTemplate ? Tf('msg_sync_ok', [templateCode, locales.map(function(l) { return l.code; }).filter(function(c) { return c !== templateCode; }).join(', ')])
                           : T('msg_no_template');
-            btnSync.onclick = function () { syncFromTemplate(); };
+            btnSync.onclick = function () { syncFromTemplate(btnSync); };
             tdSync.appendChild(btnSync);
             tr.appendChild(tdSync);
 
@@ -440,7 +488,7 @@
             var tdDel = document.createElement('td');
             tdDel.className = 'col-btn';
             var btnDel = document.createElement('button');
-            btnDel.className = 'btn btn-sm btn-danger';
+            btnDel.className = 'btn btn-sm';
             btnDel.textContent = T('delete_btn');
             btnDel.onclick = function () { deleteLocale(loc.code, btnDel); };
             tdDel.appendChild(btnDel);
@@ -466,9 +514,9 @@
           }
           if (templateCode !== prevTemplate) saveState();
           renderTable();
-          dirMsg(Tf('msg_loaded', [locales.length]), 'success');
+          log(Tf('msg_loaded', [locales.length]), 'success');
         }).catch(function (err) {
-          dirMsg(Tf('msg_load_failed', [String(err.message || err)]), 'error');
+          log(Tf('msg_load_failed', [String(err.message || err)]), 'error');
         });
       }
 
@@ -476,25 +524,54 @@
         templateCode = code;
         saveState();
         renderTable();
-        dirMsg(Tf('msg_template_set', [code]), 'success');
+        log(Tf('msg_template_set', [code]), 'success');
       }
 
-      function syncFromTemplate() {
+      // ── Sync with confirm mechanism (5 s) ──────────────
+
+      var pendingSync = false;
+      var pendingSyncTimer = null;
+
+      function syncFromTemplate(btn) {
         if (!templateCode) {
-          dirMsg(T('msg_need_template'), 'error');
+          log(T('msg_need_template'), 'error');
           return;
         }
+
         var targets = locales.filter(function (l) { return l.code !== templateCode; });
-        if (targets.length === 0) return;
+        if (targets.length === 0) {
+          log(T('msg_template_self'), 'error');
+          return;
+        }
+
+        // First click: enter confirm state
+        if (!pendingSync) {
+          pendingSync = true;
+          btn.textContent = T('sync_confirm_btn');
+          btn.classList.add('btn-success', 'btn-confirm');
+          clearTimeout(pendingSyncTimer);
+          pendingSyncTimer = setTimeout(function () {
+            pendingSync = false;
+            btn.textContent = T('sync_btn');
+            btn.classList.remove('btn-success', 'btn-confirm');
+          }, 3000);
+          return;
+        }
+
+        // Second click: confirmed — execute sync
+        pendingSync = false;
+        clearTimeout(pendingSyncTimer);
+        btn.textContent = T('sync_btn');
+        btn.classList.remove('btn-success', 'btn-confirm');
 
         var done = 0;
         var failed = [];
         function next() {
           if (done >= targets.length) {
             if (failed.length === 0) {
-              dirMsg(Tf('msg_sync_ok', [templateCode, targets.map(function(t){return t.code;}).join(', ')]), 'success');
+              log(Tf('msg_sync_ok', [templateCode, targets.map(function(t){return t.code;}).join(', ')]), 'success');
             } else {
-              dirMsg(Tf('msg_sync_failed', [failed.join(', ')]), 'error');
+              log(Tf('msg_sync_failed', [failed.join(', ')]), 'error');
             }
             return;
           }
@@ -518,9 +595,11 @@
       function openLocaleFile(code) {
         var filePath = resourceDir + '/' + code + '.json';
         ipcSend('open-file', filePath).catch(function (err) {
-          dirMsg(Tf('msg_open_failed', [String(err.message || err)]), 'error');
+          log(Tf('msg_open_failed', [String(err.message || err)]), 'error');
         });
       }
+
+      // ── Delete with confirm mechanism ──────────────────
 
       var pendingDelete = null;
 
@@ -529,13 +608,13 @@
         if (pendingDelete !== code) {
           pendingDelete = code;
           btn.textContent = T('delete_confirm_btn');
-          btn.classList.add('btn-confirm');
+          btn.classList.add('btn-danger', 'btn-confirm');
           clearTimeout(btn._resetTimer);
           btn._resetTimer = setTimeout(function () {
             if (pendingDelete === code) {
               pendingDelete = null;
               btn.textContent = T('delete_btn');
-              btn.classList.remove('btn-confirm');
+              btn.classList.remove('btn-danger', 'btn-confirm');
             }
           }, 3000);
           return;
@@ -544,43 +623,41 @@
         // Second click: confirmed
         pendingDelete = null;
         btn.textContent = T('delete_btn');
-        btn.classList.remove('btn-confirm');
+        btn.classList.remove('btn-danger', 'btn-confirm');
         clearTimeout(btn._resetTimer);
 
         ipcSend('delete-locale', { resourceDir: resourceDir, code: code }).then(function () {
-          dirMsg(Tf('msg_deleted', [code]), 'success');
+          log(Tf('msg_deleted', [code]), 'success');
           if (templateCode === code) templateCode = null;
           loadLocales();
         }).catch(function (err) {
-          dirMsg(Tf('msg_delete_failed', [String(err.message || err)]), 'error');
+          log(Tf('msg_delete_failed', [String(err.message || err)]), 'error');
         });
       }
 
       function addLocale() {
         var code = newCodeInput.value.trim();
-        var name = newNameInput.value.trim();
 
         if (!code) {
-          addMsg(T('msg_enter_code'), 'error');
+          log(T('msg_enter_code'), 'error');
           return;
         }
         if (!/^[a-z]{2,3}(-[A-Z]{2})?$/.test(code)) {
-          addMsg(T('msg_invalid_code'), 'error');
+          log(T('msg_invalid_code'), 'error');
           return;
         }
 
         ipcSend('add-locale', {
           resourceDir: resourceDir,
           code: code,
-          name: name || code,
+          name: code,
           templateCode: templateCode,
         }).then(function () {
           newCodeInput.value = '';
-          newNameInput.value = '';
-          addMsg(Tf('msg_added', [code]), 'success');
+          log(Tf('msg_added', [code]), 'success');
           loadLocales();
         }).catch(function (err) {
-          addMsg(Tf('msg_add_failed', [String(err.message || err)]), 'error');
+          log(Tf('msg_add_failed', [String(err.message || err)]), 'error');
         });
       }
 
@@ -595,7 +672,6 @@
         // Placeholders
         resourceDirInput.placeholder = T('dir_placeholder');
         newCodeInput.placeholder = T('add_code_placeholder');
-        newNameInput.placeholder = T('add_name_placeholder');
 
         // Button text
         confirmResourceDirBtn.textContent = T('set_btn');
@@ -651,7 +727,7 @@
       confirmResourceDirBtn.addEventListener('click', function () {
         var val = resourceDirInput.value.trim();
         if (!val) {
-          dirMsg(T('msg_enter_dir'), 'error');
+          log(T('msg_enter_dir'), 'error');
           return;
         }
         resourceDir = val;
@@ -667,12 +743,8 @@
 
       addLocaleBtn.addEventListener('click', addLocale);
 
-      // Press Enter in new code/name inputs
+      // Press Enter in new code input
       newCodeInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') addLocale();
-        if (e.key === 'Tab') { e.preventDefault(); newNameInput.focus(); }
-      });
-      newNameInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') addLocale();
       });
 

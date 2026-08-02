@@ -47,5 +47,6 @@ module.exports = {
   msg_template_self: '模板自身无需同步。',
   msg_no_template: '请先设置模板。',
   delete_confirm_btn: '确认删除',
+  sync_confirm_btn: '确认同步',
   delete_confirm: '确认删除语言 "{0}"？\n将删除对应的 JSON 文件。图片文件不会被删除。',
 };

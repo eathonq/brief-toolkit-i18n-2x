@@ -83,16 +83,6 @@ export class I18n {
   }
 
   /**
-   * 获取多语言文本（格式化版，ViewModel 专用）
-   * @param key 多语言文本路径（支持点语法）
-   * @param args 可选的参数数组，Date 类型根据语言 meta 自动格式化
-   * @returns 多语言文本，未找到时返回 key 本身作为 fallback
-   */
-  static format(key: string, args?: any[]): string {
-    return I18n.current.format(key, args);
-  }
-
-  /**
    * 设置回退语言
    * 当 key 在当前语言中找不到时，会回退到该语言的翻译
    * @param language 语言代码（如 "zh"）

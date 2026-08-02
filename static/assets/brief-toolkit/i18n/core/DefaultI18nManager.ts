@@ -34,10 +34,6 @@ export class DefaultI18nManager implements II18nManager {
     return key;
   }
 
-  format(key: string, _args?: any[]): string {
-    return key;
-  }
-
   async setFallbackLanguage(language: string): Promise<void> {
     console.debug(`[I18n] DefaultI18nManager.setFallbackLanguage("${language}") — real manager not bound yet`);
   }

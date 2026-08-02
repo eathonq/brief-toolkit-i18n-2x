@@ -38,6 +38,53 @@ function writeJSON(filePath, data) {
 }
 
 /**
+ * Inline .schema.json template — written to the i18n resource directory
+ * so locale JSON files can declare "$schema": ".schema.json".
+ */
+const LOCALE_SCHEMA = {
+  $schema: 'https://json-schema.org/draft/2020-12/schema',
+  $id: '.schema.json',
+  title: 'i18n locale file',
+  type: 'object',
+  required: ['meta'],
+  properties: {
+    meta: {
+      type: 'object',
+      title: '多语言文本Meta信息',
+      required: ['code'],
+      properties: {
+        code: {
+          type: 'string',
+          title: '多语言编码（也是多语言文件名称，图片目录名称）',
+        },
+        name: {
+          type: 'string',
+          title: '多语言名称',
+        },
+        version: {
+          type: 'string',
+          title: '多语言版本',
+        },
+      },
+      additionalProperties: true,
+    },
+  },
+  additionalProperties: true,
+};
+
+/**
+ * Ensure .schema.json exists in the given i18n resource directory.
+ * If not present, write it from the inline LOCALE_SCHEMA constant.
+ */
+function ensureSchemaFile(resourceDir) {
+  var targetPath = path.join(resourceDir, '.schema.json');
+  if (fs.existsSync(targetPath)) return;
+
+  writeJSON(targetPath, LOCALE_SCHEMA);
+  Editor.log('[' + PACKAGE_NAME + '] Created .schema.json in ' + resourceDir);
+}
+
+/**
  * Resolve resourceDir relative to project path.
  * If relative, resolve against Editor.Project.path.
  */
@@ -164,6 +211,8 @@ module.exports = {
         event.reply(new Error('Resource directory not configured.'));
         return;
       }
+
+      ensureSchemaFile(absDir);
 
       var targetPath = path.join(absDir, code + '.json');
       if (fs.existsSync(targetPath)) {

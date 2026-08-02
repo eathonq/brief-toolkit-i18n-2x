@@ -48,18 +48,6 @@ export interface II18nManager {
   text(key: string, args?: string[]): string;
 
   /**
-   * 获取多语言文本（格式化版，ViewModel 专用）
-   * @param key 多语言文本路径（支持点语法）
-   * @param args 可选的参数数组，支持 Date / 数字 / 字符串等类型
-   *             Date 类型会根据语言 meta 中的 dateFormat/dateTimeFormat 自动格式化
-   * @returns 多语言文本，如果未找到则返回路径本身作为 fallback
-   * @example
-   * I18n.format("time_now", [new Date()]);        // "当前时间：2026年06月10日 14:30:00"
-   * I18n.format("publish_at", [new Date("2026-06-10")]); // "发布于 2026年06月10日"
-   */
-  format(key: string, args?: any[]): string;
-
-  /**
    * 设置回退语言
    * 当 key 在当前语言中找不到时，会回退到该语言的翻译
    * @param language 语言代码（如 "zh"）

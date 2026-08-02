@@ -7,7 +7,7 @@
   "scene-script": "scene-script.js",
   "main-menu": {
     "i18n/打开 i18n 面板": {
-      "message": "打开 i18n 面板"
+      "message": "brief-toolkit-i18n-2x:open-i18n-panel"
     }
   },
   "panel": {
