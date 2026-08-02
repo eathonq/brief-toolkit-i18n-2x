@@ -285,12 +285,14 @@ module.exports = {
      * bundle image paths from the scene webview into the main process,
      * where Editor.assetdb is available.
      *
-     * In 2.x the SpriteFrame UUID is stored in the .meta file's
-     * subMetas.spriteFrame.uuid field — not accessible via a URL suffix.
+     * Uses the official Editor.assetdb.subAssetInfos(url) API to
+     * retrieve sub-asset UUIDs (e.g. "xxx@6c48a") without manually
+     * parsing .meta files. This aligns with the 3.x approach of
+     * using Editor.Message.request('asset-db', 'query-asset-info', url).
      *
      * Example: "db://bundle-i18n/zh/start"
      *   → finds "db://assets/bundle-i18n/zh/start.png"
-     *   → reads "…/start.png.meta" → subMetas.spriteFrame.uuid
+     *   → subAssetInfos() → returns SpriteFrame UUID "xxx@6c48a"
      */
     'resolve-sprite-uuid'(event, dbUrl) {
       var inner = (dbUrl || '').replace(/^db:\/\//, '');
@@ -320,22 +322,15 @@ module.exports = {
         return;
       }
 
-      // Step 2: read the .meta file to find the SpriteFrame sub-asset UUID.
-      // In Cocos Creator 2.x, when type=image/sprite, each subMeta with
-      // importer=texture is a SpriteFrame. Its UUID has the format
-      // "{assetUuid}@{hash}" — that's the sub-asset UUID we need.
-      var fspath = Editor.assetdb.urlToFspath(textureUrl);
-      var metaPath = fspath + '.meta';
-      var meta = readJSON(metaPath);
-      if (meta && meta.subMetas) {
-        // Iterate over subMetas to find the first SpriteFrame entry.
-        // Typical keys: "spriteFrame", or named frames like "home", "start".
-        var subKeys = Object.keys(meta.subMetas);
-        for (var k = 0; k < subKeys.length; k++) {
-          var sub = meta.subMetas[subKeys[k]];
-          if (sub && sub.importer === 'texture' && sub.uuid) {
-            // sub.uuid is the SpriteFrame UUID, e.g. "xxx@6c48a"
-            event.reply(null, sub.uuid);
+      // Step 2: use the official asset-db API to get SpriteFrame sub-assets.
+      // Editor.assetdb.subAssetInfos(url) returns all sub-asset entries
+      // with their UUIDs (e.g. "xxx@6c48a"), types, and paths —
+      // no need to manually parse .meta internals.
+      var subs = Editor.assetdb.subAssetInfos(textureUrl);
+      if (subs && subs.length > 0) {
+        for (var k = 0; k < subs.length; k++) {
+          if (subs[k].uuid) {
+            event.reply(null, subs[k].uuid);
             return;
           }
         }
