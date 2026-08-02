@@ -14,7 +14,7 @@
     "main": "panel/i18n-panel.html",
     "type": "simple",
     "title": "i18n 管理器",
-    "width": 680,
+    "width": 600,
     "height": 520,
     "min-width": 400,
     "min-height": 300

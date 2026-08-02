@@ -210,8 +210,8 @@
     }
 
     .badge-template {
-      background: rgba(43, 136, 216, 0.25);
-      color: #2b88d8;
+      background: rgba(76, 175, 80, 0.25);
+      color: #4caf50;
     }
 
     .badge-normal {
@@ -305,7 +305,6 @@
             <tr>
               <th id="thCode" class="col-code"></th>
               <th id="thName" class="col-name"></th>
-              <th id="thBadge" class="col-badge"></th>
               <th id="thSetTemplate" class="col-btn"></th>
               <th id="thSync" class="col-btn"></th>
               <th id="thOpen" class="col-btn"></th>
@@ -313,7 +312,7 @@
             </tr>
           </thead>
           <tbody id="dirTableBody">
-            <tr><td colspan="7" class="empty-tip"></td></tr>
+            <tr><td colspan="6" class="empty-tip"></td></tr>
           </tbody>
         </table>
       </div>
@@ -416,7 +415,7 @@
         if (locales.length === 0) {
           var tr = document.createElement('tr');
           var td = document.createElement('td');
-          td.colSpan = 7;
+          td.colSpan = 6;
           td.className = 'empty-tip';
           td.textContent = resourceDir ? T('empty_no_files') : T('empty_tip');
           tr.appendChild(td);
@@ -441,24 +440,21 @@
             tdName.textContent = loc.name || loc.code;
             tr.appendChild(tdName);
 
-            // Badge
-            var tdBadge = document.createElement('td');
-            tdBadge.className = 'col-badge';
-            var badge = document.createElement('span');
-            badge.className = 'badge ' + (isTemplate ? 'badge-template' : 'badge-normal');
-            badge.textContent = isTemplate ? T('badge_template') : T('badge_none');
-            tdBadge.appendChild(badge);
-            tr.appendChild(tdBadge);
-
             // Set Template
             var tdSet = document.createElement('td');
             tdSet.className = 'col-btn';
-            var btnSet = document.createElement('button');
-            btnSet.className = 'btn btn-sm';
-            btnSet.textContent = T('template_btn');
-            btnSet.disabled = isTemplate;
-            btnSet.onclick = function () { setTemplate(loc.code); };
-            tdSet.appendChild(btnSet);
+            if (isTemplate) {
+              var badge = document.createElement('span');
+              badge.className = 'badge badge-template';
+              badge.textContent = T('badge_template');
+              tdSet.appendChild(badge);
+            } else {
+              var btnSet = document.createElement('button');
+              btnSet.className = 'btn btn-sm';
+              btnSet.textContent = T('template_btn');
+              btnSet.onclick = function () { setTemplate(loc.code); };
+              tdSet.appendChild(btnSet);
+            }
             tr.appendChild(tdSet);
 
             // Sync — only the template row can push keys to others
@@ -680,7 +676,6 @@
         // Table headers
         $('thCode').textContent = T('col_code');
         $('thName').textContent = T('col_name');
-        $('thBadge').textContent = T('col_template');
         $('thSetTemplate').textContent = T('col_set_template');
         $('thSync').textContent = T('col_sync');
         $('thOpen').textContent = T('col_open');
