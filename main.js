@@ -321,13 +321,24 @@ module.exports = {
       }
 
       // Step 2: read the .meta file to find the SpriteFrame sub-asset UUID.
-      // The meta file is a JSON sidecar next to the image asset.
+      // In Cocos Creator 2.x, when type=image/sprite, each subMeta with
+      // importer=texture is a SpriteFrame. Its UUID has the format
+      // "{assetUuid}@{hash}" — that's the sub-asset UUID we need.
       var fspath = Editor.assetdb.urlToFspath(textureUrl);
       var metaPath = fspath + '.meta';
       var meta = readJSON(metaPath);
-      if (meta && meta.subMetas && meta.subMetas.spriteFrame && meta.subMetas.spriteFrame.uuid) {
-        event.reply(null, meta.subMetas.spriteFrame.uuid);
-        return;
+      if (meta && meta.subMetas) {
+        // Iterate over subMetas to find the first SpriteFrame entry.
+        // Typical keys: "spriteFrame", or named frames like "home", "start".
+        var subKeys = Object.keys(meta.subMetas);
+        for (var k = 0; k < subKeys.length; k++) {
+          var sub = meta.subMetas[subKeys[k]];
+          if (sub && sub.importer === 'texture' && sub.uuid) {
+            // sub.uuid is the SpriteFrame UUID, e.g. "xxx@6c48a"
+            event.reply(null, sub.uuid);
+            return;
+          }
+        }
       }
 
       // Fallback: return the raw texture UUID (no crop, but shows the image)

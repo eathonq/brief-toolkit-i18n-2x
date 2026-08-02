@@ -346,16 +346,17 @@ export class I18nManager implements II18nManager {
     }
 
     // db:// bundle 路径 → 编辑器桥接拿 UUID → 自己加载资产
-    var resolveUuid = (window as any).__btk_i18n_resolveUuid;
+    const resolveUuid = (window as any).__btk_i18n_resolveUuid;
     if (typeof resolveUuid !== 'function') {
+      console.warn("I18nManager: Editor bridge function '__btk_i18n_resolveUuid' is not available.");
       return null; // 桥接不可用
     }
 
-    var uuid: any = await resolveUuid(imagePath);
+    const uuid: string = await resolveUuid(imagePath);
     if (!uuid) return null;
 
     return new Promise<cc.SpriteFrame | null>((resolve) => {
-      cc.assetManager.loadAny(uuid as string, (_err: Error | null, asset: any) => {
+      cc.assetManager.loadAny(uuid, (_err: Error | null, asset: any) => {
         if (_err || !asset) { resolve(null); return; }
         if (asset instanceof cc.SpriteFrame) { resolve(asset); return; }
         if (asset instanceof cc.Texture2D) {
