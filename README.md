@@ -94,8 +94,8 @@ brief-toolkit-i18n-2x
 ### 代码调用（推荐 pure.ts）
 
 ```ts
-import { I18n, DateFormatter } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/i18n/pure";
-import { EventBus } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/common/pure";
+import { I18n, DateFormatter } from "../brief-toolkit-i18n-2x-plugin/i18n/pure";
+import { EventBus } from "../brief-toolkit-i18n-2x-plugin/common/pure";
 
 // 切换语言
 await I18n.switch("en");

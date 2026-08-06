@@ -112,7 +112,7 @@ resources
 ### 4. ViewModel 代码调用（推荐使用 `pure.ts`）
 
 ```ts
-import { I18n } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/i18n/pure";
+import { I18n } from "../brief-toolkit-i18n-2x-plugin/i18n/pure";
 
 // 切换语言
 await I18n.switch("en");
@@ -143,8 +143,8 @@ I18n.clearFallbackLanguage();
 ### 6. 事件监听与切换状态
 
 ```ts
-import { I18nEventType } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/i18n/pure";
-import { EventBus } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/common/pure";
+import { I18nEventType } from "../brief-toolkit-i18n-2x-plugin/i18n/pure";
+import { EventBus } from "../brief-toolkit-i18n-2x-plugin/common/pure";
 
 // UI 响应：用事件驱动，不要轮询属性
 EventBus.on(I18nEventType.LANGUAGE_BEFORE_SWITCH, ({ from, to }) => {
@@ -175,8 +175,8 @@ EventBus.offByToken(token);
 ### 8. 调试模式（显示 key 而非翻译文本）
 
 ```ts
-import { I18nManager } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/i18n/core/I18nManager";
-import { I18nLabelMode } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/i18n/core/II18nManager";
+import { I18nManager } from "../brief-toolkit-i18n-2x-plugin/i18n/core/I18nManager";
+import { I18nLabelMode } from "../brief-toolkit-i18n-2x-plugin/i18n/core/II18nManager";
 
 I18nManager.instance.labelModel = I18nLabelMode.PATH;  // 显示 key
 I18nManager.instance.labelModel = I18nLabelMode.DATA;  // 恢复翻译
@@ -253,8 +253,8 @@ ViewModel 从 `pure.ts` 导入，单元测试 / SSR 环境下也能正常运行�
 ## API 速查
 
 ```ts
-import { I18n } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/i18n/pure";
-import { EventBus } from "../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/common/pure";
+import { I18n } from "../brief-toolkit-i18n-2x-plugin/i18n/pure";
+import { EventBus } from "../brief-toolkit-i18n-2x-plugin/common/pure";
 
 // ── 属性 ──
 I18n.language              // string       当前语言代码

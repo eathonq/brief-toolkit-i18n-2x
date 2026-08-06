@@ -121,7 +121,7 @@ scope.releaseAll(); // JSON + 图片统一释放
 **使用示例**：
 
 ```ts
-import { EventBus } from '../packages/brief-toolkit-i18n-2x/static/assets/brief-toolkit/common/pure';
+import { EventBus } from '../brief-toolkit-i18n-2x-plugin/common/pure';
 
 // 订阅
 const token = EventBus.on<{ score: number }>('score-changed', (payload) => {
